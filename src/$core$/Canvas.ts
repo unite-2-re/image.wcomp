@@ -94,7 +94,6 @@ export default class UCanvas extends HTMLCanvasElement {
         //
         this.ctx = canvas.getContext("2d", {
             desynchronized: true,
-            willReadFrequently: false,
             powerPreference: "high-performance"
         }) as CanvasRenderingContext2D;
 
@@ -102,7 +101,7 @@ export default class UCanvas extends HTMLCanvasElement {
         this.inert = true;
         this.style.objectFit = "cover";
         this.style.objectPosition = "center";
-        this.classList.add("w-canvas");
+        this.classList.add("u-canvas");
 
         //
         new ResizeObserver((entries) => {
