@@ -81,6 +81,9 @@ export default class UCanvas extends HTMLCanvasElement {
         this.style.aspectRatio = `${this.clientWidth} / ${this.clientHeight}`;
         this.style.containIntrinsicInlineSize = `${this.width}px`;
         this.style.containIntrinsicBlockSize = `${this.height}px`;
+
+        //
+        this.#preload(this.dataset.src, false).then(() => this.#render());
     }
 
     //
@@ -152,6 +155,8 @@ export default class UCanvas extends HTMLCanvasElement {
         const ctx = this.ctx;
         const img = this.image;
 
+        console.log(img);
+
         //
         if (img && ctx) {
             const orientation = getCorrectOrientation() || "";
@@ -174,7 +179,7 @@ export default class UCanvas extends HTMLCanvasElement {
 
     //
     async $useImageAsSource(blob, doNotRewrite = true) {
-        const img = (blob instanceof ImageBitmap) ? blob : (await createImageBitmapCache(blob).catch((_) => null));
+        const img = (blob instanceof ImageBitmap) ? blob : (await createImageBitmapCache(blob).catch(console.warn.bind(console)));
 
         //
         if (blob instanceof Blob || blob instanceof File) {
@@ -190,7 +195,7 @@ export default class UCanvas extends HTMLCanvasElement {
 
     //
     #preload(src, dnw = true) {
-        return fetch(src)?.then?.(async (rsp)=> this.$useImageAsSource(rsp.blob(), dnw ?? true).catch((_) => null))?.catch?.(console.warn.bind(console));;
+        return fetch(src)?.then?.(async (rsp)=> this.$useImageAsSource(await rsp.blob(), dnw ?? true)?.catch(console.warn.bind(console)))?.catch?.(console.warn.bind(console));;
     }
 
     //
@@ -203,3 +208,19 @@ export default class UCanvas extends HTMLCanvasElement {
 
 //
 customElements.define('u-canvas', UCanvas, {extends: 'canvas'});
+
+// @ts-ignore
+import styles from "../$scss$/Canvas.scss?inline";
+
+//
+const loadBlobStyle = (inline: string)=>{
+    const style = document.createElement("link");
+    style.rel = "stylesheet";
+    style.type = "text/css";
+    style.href = URL.createObjectURL(new Blob([inline], {type: "text/css"}));
+    document.head.appendChild(style);
+    return style;
+}
+
+//
+loadBlobStyle(styles);
