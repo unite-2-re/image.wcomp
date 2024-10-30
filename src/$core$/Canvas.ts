@@ -155,8 +155,6 @@ export default class UCanvas extends HTMLCanvasElement {
         const ctx = this.ctx;
         const img = this.image;
 
-        console.log(img);
-
         //
         if (img && ctx) {
             const orientation = getCorrectOrientation() || "";
