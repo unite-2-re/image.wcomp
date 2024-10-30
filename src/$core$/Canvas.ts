@@ -215,6 +215,7 @@ const loadBlobStyle = (inline: string)=>{
     const style = document.createElement("link");
     style.rel = "stylesheet";
     style.type = "text/css";
+    style.dataset.owner = "image";
     style.href = URL.createObjectURL(new Blob([inline], {type: "text/css"}));
     document.head.appendChild(style);
     return style;
