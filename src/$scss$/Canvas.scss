@@ -15,9 +15,9 @@
 
         //
         pointer-events: none !important;
-        place-content: center;
-        place-items: center;
-        place-self: center;
+        place-content: safe center;
+        place-items: safe center;
+        place-self: safe center;
 
         //
         aspect-ratio: auto;
