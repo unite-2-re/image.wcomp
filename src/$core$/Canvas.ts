@@ -64,7 +64,7 @@ const createImageBitmapCache = (blob)=>{
 }
 
 //
-export default class UCanvas extends HTMLCanvasElement {
+export default class UICanvas extends HTMLCanvasElement {
     static observedAttributes = ["data-src"];
 
     //
@@ -205,7 +205,7 @@ export default class UCanvas extends HTMLCanvasElement {
 }
 
 //
-customElements.define('u-canvas', UCanvas, {extends: 'canvas'});
+customElements.define('ui-canvas', UICanvas, {extends: 'canvas'});
 
 // @ts-ignore
 import styles from "../$scss$/Canvas.scss?inline&compress";

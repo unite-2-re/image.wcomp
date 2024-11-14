@@ -1,7 +1,7 @@
 
 @layer u2-canvas {
     //
-    :where(canvas):is([is="u-canvas"]) {
+    :where(canvas):is([is="ui-canvas"]), :host(canvas[is="ui-canvas"]) {
         min-inline-size: 1px;
         min-block-size: 1px;
 
