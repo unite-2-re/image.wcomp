@@ -143,7 +143,7 @@ export default class UICanvas extends HTMLCanvasElement {
         screen.orientation.addEventListener("change", fixSize);
         matchMedia("(orientation: portrait)").addEventListener("change", fixSize);
         window.addEventListener("resize", fixSize);
-        requestAnimationFrame(fixSize);
+        requestIdleCallback(fixSize, {timeout: 1000});
 
         //
         this.#preload(this.dataset.src, false).then(() => this.#render());
