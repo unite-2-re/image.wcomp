@@ -9,6 +9,24 @@ export const getCorrectOrientation = () => {
 };
 
 //
+const delayed = new Map<number, Function | null>([]);
+requestIdleCallback(async ()=>{
+    while(true) {
+        for (const dl of delayed.entries()) {
+            dl[1]?.(); delayed.delete(dl[0]);
+        }
+
+        //
+        try { await (new Promise((rs)=>requestAnimationFrame(rs))); } catch(e) { break; };
+    }
+}, {timeout: 1000});
+
+//
+const callByFrame = (pointerId, cb)=>{
+    delayed.set(pointerId, cb);
+}
+
+//
 const cover = (ctx, img, scale = 1, port) => {
     const orientation = getCorrectOrientation();
     const canvas = ctx.canvas;
@@ -157,21 +175,24 @@ export default class UICanvas extends HTMLCanvasElement {
 
         //
         if (img && ctx) {
-            const orientation = getCorrectOrientation() || "";
-            const ox = (orientation.startsWith("portrait") ? 1 : 0) - 0;
+            // TODO! multiple canvas support
+            callByFrame(0, ()=>{
+                const orientation = getCorrectOrientation() || "";
+                const ox = (orientation.startsWith("portrait") ? 1 : 0) - 0;
 
-            //
-            const port = img.width < img.height ? 1 : 0;
-            const scale = Math.max(
-                canvas[["width", "height"][ox]] / img[["width", "height"][port]],
-                canvas[["height", "width"][ox]] / img[["height", "width"][port]]);
+                //
+                const port = img.width < img.height ? 1 : 0;
+                const scale = Math.max(
+                    canvas[["width", "height"][ox]] / img[["width", "height"][port]],
+                    canvas[["height", "width"][ox]] / img[["height", "width"][port]]);
 
-            //
-            ctx.save();
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            cover(ctx, img, scale, port);
-            ctx.drawImage(img, 0, 0, img.width * scale, img.height * scale);
-            ctx.restore();
+                //
+                ctx.save();
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                cover(ctx, img, scale, port);
+                ctx.drawImage(img, 0, 0, img.width * scale, img.height * scale);
+                ctx.restore();
+            });
         }
     }
 
