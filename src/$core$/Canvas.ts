@@ -166,8 +166,8 @@ export default class UICanvas extends HTMLCanvasElement {
             if (this.width  != this.#size[0]) { this.width  = this.#size[0]; };
             if (this.height != this.#size[1]) { this.height = this.#size[1]; };
             this.style.aspectRatio = `${this.width || 1} / ${this.height || 1}`;
-            this.style.containIntrinsicInlineSize = `${this.width  || 1}px`;
-            this.style.containIntrinsicBlockSize  = `${this.height || 1}px`;
+            //this.style.containIntrinsicInlineSize = `${this.width  || 1}px`;
+            //this.style.containIntrinsicBlockSize  = `${this.height || 1}px`;
 
             // TODO! multiple canvas support
             callByFrame(0, ()=>{
