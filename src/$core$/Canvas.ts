@@ -44,57 +44,11 @@ const callByFrame = (pointerId, cb)=>{
 
 //
 const cover = (ctx, img, scale = 1, port, orient = 0) => {
-    //const orientation = getCorrectOrientation();
     const canvas = ctx.canvas;
-
-    //
-    switch (orient) {
-        //
-        case 0: {
-            ctx.translate(canvas.width / 2, canvas.height / 2);
-            ctx.rotate(0 * (Math.PI / 180));
-            ctx.rotate(port * -90 * (Math.PI / 180));
-            ctx.translate(-(img.width / 2) * scale, -(img.height / 2) * scale);
-        };
-        break;
-
-        //
-        case 1: {
-            ctx.translate(canvas.width / 2, canvas.height / 2);
-            ctx.rotate(90 * (Math.PI / 180));
-            ctx.rotate(port * -90 * (Math.PI / 180));
-            ctx.translate(-(img.width / 2) * scale, -(img.height / 2) * scale);
-        };
-        break;
-
-        //
-        case 2: {
-            ctx.translate(canvas.width / 2, canvas.height / 2);
-            ctx.rotate(180 * (Math.PI / 180));
-            ctx.rotate(port * -90 * (Math.PI / 180));
-            ctx.translate(-(img.width / 2) * scale, -(img.height / 2) * scale);
-        };
-        break;
-
-        //
-        case 3: {
-            ctx.translate(canvas.width / 2, canvas.height / 2);
-            ctx.rotate(270 * (Math.PI / 180));
-            ctx.rotate(port * -90 * (Math.PI / 180));
-            ctx.translate(-(img.width / 2) * scale, -(img.height / 2) * scale);
-        };
-        break;
-
-        //
-        default: {
-            ctx.translate(canvas.width / 2, canvas.height / 2);
-            ctx.rotate(0 * (Math.PI / 180));
-            ctx.rotate(port * -90 * (Math.PI / 180));
-            ctx.translate(-(img.width / 2) * scale, -(img.height / 2) * scale);
-        };
-        break;
-    }
-
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate((orient || 0) * (Math.PI * 0.5));
+    ctx.rotate(port * -(Math.PI / 2));
+    ctx.translate(-(img.width / 2) * scale, -(img.height / 2) * scale);
 };
 
 //
