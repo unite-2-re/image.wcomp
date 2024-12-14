@@ -9,6 +9,22 @@ export const getCorrectOrientation = () => {
 };
 
 //
+/*export const orientationNumberMap = {
+    "portrait-primary": 0, // as 0deg, aka. 360deg
+    "landscape-primary": 1, // as -90deg, aka. 270deg
+    "portrait-secondary": 2, // as -180deg, aka. 180deg
+    "landscape-secondary": 3 // as -270deg, aka. 90deg
+}*/
+
+//
+export const orientationNumberMap = {
+    "landscape-primary": 0, // as 0deg, aka. 360deg
+    "portrait-secondary": 1, // as -90deg, aka. 270deg
+    "landscape-secondary": 2, // as -180deg, aka. 180deg
+    "portrait-primary": 3, // as -270deg, aka. 90deg
+}
+
+//
 const delayed = new Map<number, Function | null>([]);
 requestIdleCallback(async ()=>{
     while(true) {
@@ -27,14 +43,14 @@ const callByFrame = (pointerId, cb)=>{
 }
 
 //
-const cover = (ctx, img, scale = 1, port) => {
-    const orientation = getCorrectOrientation();
+const cover = (ctx, img, scale = 1, port, orient = 0) => {
+    //const orientation = getCorrectOrientation();
     const canvas = ctx.canvas;
 
     //
-    switch (orientation) {
+    switch (orient) {
         //
-        case "landscape-primary": {
+        case 0: {
             ctx.translate(canvas.width / 2, canvas.height / 2);
             ctx.rotate(0 * (Math.PI / 180));
             ctx.rotate(port * -90 * (Math.PI / 180));
@@ -43,7 +59,7 @@ const cover = (ctx, img, scale = 1, port) => {
         break;
 
         //
-        case "portrait-primary": {
+        case 1: {
             ctx.translate(canvas.width / 2, canvas.height / 2);
             ctx.rotate(90 * (Math.PI / 180));
             ctx.rotate(port * -90 * (Math.PI / 180));
@@ -52,7 +68,7 @@ const cover = (ctx, img, scale = 1, port) => {
         break;
 
         //
-        case "landscape-secondary": {
+        case 2: {
             ctx.translate(canvas.width / 2, canvas.height / 2);
             ctx.rotate(180 * (Math.PI / 180));
             ctx.rotate(port * -90 * (Math.PI / 180));
@@ -61,9 +77,18 @@ const cover = (ctx, img, scale = 1, port) => {
         break;
 
         //
-        case "portrait-secondary": {
+        case 3: {
             ctx.translate(canvas.width / 2, canvas.height / 2);
             ctx.rotate(270 * (Math.PI / 180));
+            ctx.rotate(port * -90 * (Math.PI / 180));
+            ctx.translate(-(img.width / 2) * scale, -(img.height / 2) * scale);
+        };
+        break;
+
+        //
+        default: {
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate(0 * (Math.PI / 180));
             ctx.rotate(port * -90 * (Math.PI / 180));
             ctx.translate(-(img.width / 2) * scale, -(img.height / 2) * scale);
         };
@@ -89,6 +114,7 @@ export default class UICanvas extends HTMLCanvasElement {
     ctx: CanvasRenderingContext2D | null = null;
     image: ImageBitmap | null = null;
     #size: [number, number] = [1, 1];
+    #orient: number = 0;
 
     //
     connectedCallback() {
@@ -110,8 +136,10 @@ export default class UICanvas extends HTMLCanvasElement {
 
         //
         this.ctx = canvas.getContext("2d", {
+            alpha: true,
             desynchronized: true,
-            powerPreference: "high-performance"
+            powerPreference: "high-performance",
+            preserveDrawingBuffer: true
         }) as CanvasRenderingContext2D;
 
         //
@@ -122,22 +150,9 @@ export default class UICanvas extends HTMLCanvasElement {
         this.classList.add("u2-canvas");
         this.classList.add("ui-canvas");
 
-        // TODO! Safari backward compatible
-        new ResizeObserver((entries) => {
-            for (const entry of entries) {
-                const box = entry?.devicePixelContentBoxSize?.[0];
-                if (box) {
-                    this.#size  = [
-                        Math.max(/*contentBox.inlineSize * devicePixelRatio*/box.inlineSize || this.width, 1),
-                        Math.max(/*contentBox.blockSize  * devicePixelRatio*/box.blockSize  || this.height, 1)
-                    ];
-                    this.#render();
-                }
-            }
-        }).observe(this, {box: "device-pixel-content-box"});
-
         //
         const fixSize = () => {
+            this.#orient = orientationNumberMap[getCorrectOrientation() || ""] || 0;
             this.#size = [
                 Math.max((this.clientWidth  || parent?.clientWidth  || 1) * devicePixelRatio, 1),
                 Math.max((this.clientHeight || parent?.clientHeight || 1) * devicePixelRatio, 1)
@@ -146,10 +161,27 @@ export default class UICanvas extends HTMLCanvasElement {
         }
 
         //
-        screen.orientation.addEventListener("change", fixSize);
-        matchMedia("(orientation: portrait)").addEventListener("change", fixSize);
-        addEventListener("resize", fixSize);
-        requestIdleCallback(fixSize, {timeout: 1000});
+        document?.documentElement.addEventListener("fullscreenchange", fixSize, {passive: true });
+        screen.orientation.addEventListener("change", fixSize, {passive: true});
+        matchMedia("(orientation: portrait)").addEventListener("change", fixSize, {passive: true});
+        addEventListener("resize", fixSize, {passive: true});
+        fixSize();
+        //requestIdleCallback(fixSize, {timeout: 1000});
+
+        // TODO! Safari backward compatible
+        new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                const box = entry?.devicePixelContentBoxSize?.[0];
+                if (box) {
+                    this.#orient = orientationNumberMap[getCorrectOrientation() || ""] || 0;
+                    this.#size  = [
+                        Math.max(/*contentBox.inlineSize * devicePixelRatio*/box.inlineSize || this.width, 1),
+                        Math.max(/*contentBox.blockSize  * devicePixelRatio*/box.blockSize  || this.height, 1)
+                    ];
+                    this.#render();
+                }
+            }
+        }).observe(this, {box: "device-pixel-content-box"});
 
         //
         this.#preload(this.dataset.src, false).then(() => this.#render());
@@ -163,18 +195,17 @@ export default class UICanvas extends HTMLCanvasElement {
 
         //
         if (img && ctx) {
-            if (this.width  != this.#size[0]) { this.width  = this.#size[0]; };
-            if (this.height != this.#size[1]) { this.height = this.#size[1]; };
-            this.style.aspectRatio = `${this.width || 1} / ${this.height || 1}`;
-            //this.style.containIntrinsicInlineSize = `${this.width  || 1}px`;
-            //this.style.containIntrinsicBlockSize  = `${this.height || 1}px`;
 
             // TODO! multiple canvas support
             callByFrame(0, ()=>{
-                const orientation = getCorrectOrientation() || "";
-                const ox = (orientation.startsWith("portrait") ? 1 : 0) - 0;
+                if (this.width  != this.#size[0]) { this.width  = this.#size[0]; };
+                if (this.height != this.#size[1]) { this.height = this.#size[1]; };
+                this.style.aspectRatio = `${this.width || 1} / ${this.height || 1}`;
+                //this.style.containIntrinsicInlineSize = `${this.width  || 1}px`;
+                //this.style.containIntrinsicBlockSize  = `${this.height || 1}px`;
 
                 //
+                const ox = (this.#orient%2) || 0;
                 const port = img.width < img.height ? 1 : 0;
                 const scale = Math.max(
                     canvas[["width", "height"][ox]] / img[["width", "height"][port]],
@@ -183,7 +214,7 @@ export default class UICanvas extends HTMLCanvasElement {
                 //
                 ctx.save();
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                cover(ctx, img, scale, port);
+                cover(ctx, img, scale, port, this.#orient);
                 ctx.drawImage(img, 0, 0, img.width * scale, img.height * scale);
                 ctx.restore();
             });
