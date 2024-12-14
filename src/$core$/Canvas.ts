@@ -19,9 +19,9 @@ export const getCorrectOrientation = () => {
 //
 export const orientationNumberMap = {
     "landscape-primary": 0, // as 0deg, aka. 360deg
-    "portrait-secondary": 1, // as -90deg, aka. 270deg
+    "portrait-primary": 1, // as -90deg, aka. 270deg
     "landscape-secondary": 2, // as -180deg, aka. 180deg
-    "portrait-primary": 3, // as -270deg, aka. 90deg
+    "portrait-secondary": 3, // as -270deg, aka. 90deg
 }
 
 //
