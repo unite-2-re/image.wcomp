@@ -69,6 +69,8 @@ export default class UICanvas extends HTMLCanvasElement {
     image: ImageBitmap | null = null;
     #size: [number, number] = [1, 1];
     #orient: number = 0;
+    #loading: string|Blob|File = "";
+    #ready: string|Blob|File = "";
 
     //
     connectedCallback() {
@@ -77,7 +79,7 @@ export default class UICanvas extends HTMLCanvasElement {
             Math.min(Math.max(this.clientWidth  || parent?.clientWidth  || 1, 1), Math.min(parent?.clientWidth  || 1, screen?.width  || 1)) * (devicePixelRatio || 1),
             Math.min(Math.max(this.clientHeight || parent?.clientHeight || 1, 1), Math.min(parent?.clientHeight || 1, screen?.height || 1)) * (devicePixelRatio || 1)
         ];
-        this.#preload(this.dataset.src, false).then(() => this.#render());
+        this.#preload(this.dataset.src, false);
     }
 
     //
@@ -111,7 +113,7 @@ export default class UICanvas extends HTMLCanvasElement {
                 Math.max((this.clientWidth  || parent?.clientWidth  || 1) * devicePixelRatio, 1),
                 Math.max((this.clientHeight || parent?.clientHeight || 1) * devicePixelRatio, 1)
             ];
-            this.#render();
+            this.#render(this.#ready);
         }
 
         //
@@ -132,26 +134,27 @@ export default class UICanvas extends HTMLCanvasElement {
                         Math.max(/*contentBox.inlineSize * devicePixelRatio*/box.inlineSize || this.width, 1),
                         Math.max(/*contentBox.blockSize  * devicePixelRatio*/box.blockSize  || this.height, 1)
                     ];
-                    this.#render();
+                    this.#render(this.#ready);
                 }
             }
         }).observe(this, {box: "device-pixel-content-box"});
 
         //
-        this.#preload(this.dataset.src, false).then(() => this.#render());
+        this.#preload(this.dataset.src, false);
     }
 
     //
-    #render() {
+    #render(whatIsReady?: File|Blob|string) {
         const canvas = this;
         const ctx = this.ctx;
         const img = this.image;
 
         //
-        if (img && ctx) {
+        if (img && ctx && (whatIsReady == this.#loading || !whatIsReady)) {
 
             // TODO! multiple canvas support
             callByFrame(0, ()=>{
+                if (whatIsReady) { this.#ready = whatIsReady; };
                 if (this.width  != this.#size[0]) { this.width  = this.#size[0]; };
                 if (this.height != this.#size[1]) { this.height = this.#size[1]; };
                 this.style.aspectRatio = `${this.width || 1} / ${this.height || 1}`;
@@ -177,29 +180,22 @@ export default class UICanvas extends HTMLCanvasElement {
 
     //
     async $useImageAsSource(blob, doNotRewrite = true) {
+        const ready = this.#loading;
         const img = (blob instanceof ImageBitmap) ? blob : (await createImageBitmapCache(blob).catch(console.warn.bind(console)));
-
-        //
-        if (blob instanceof Blob || blob instanceof File) {
-            dispatchEvent(new CustomEvent("u-wallpaper", {detail: {blob, doNotRewrite}}));
-        }
-
-        //
-        if (img) {this.image = img; this.#render();}
-
-        //
+        if (img && ready == this.#loading) { this.image = img; this.#render(ready);}
         return blob;
     }
 
     //
     #preload(src, dnw = true) {
+        this.#loading = src;
         return fetch(src)?.then?.(async (rsp)=> this.$useImageAsSource(await rsp.blob(), dnw ?? true)?.catch(console.warn.bind(console)))?.catch?.(console.warn.bind(console));;
     }
 
     //
     attributeChangedCallback(name, _, newValue) {
         if (name == "data-src") {
-            this.#preload(newValue, false).then(() => this.#render());
+            this.#preload(newValue, false);
         };
     }
 }
