@@ -1,4 +1,7 @@
-import { callByFrame, cover, createImageBitmapCache, getCorrectOrientation, orientationNumberMap } from "./Utils.js";
+import { callByFrame, cover, createImageBitmapCache, orientationNumberMap } from "./Utils.js"
+
+// @ts-ignore
+import { whenAnyScreenChanges, getCorrectOrientation } from "/externals/core/agate.js";
 
 //
 export default class UICanvas extends HTMLCanvasElement {
@@ -57,12 +60,7 @@ export default class UICanvas extends HTMLCanvasElement {
         }
 
         //
-        document?.documentElement.addEventListener("fullscreenchange", fixSize, {passive: true });
-        screen.orientation.addEventListener("change", fixSize, {passive: true});
-        matchMedia("(orientation: portrait)").addEventListener("change", fixSize, {passive: true});
-        addEventListener("resize", fixSize, {passive: true});
-        fixSize();
-        //requestIdleCallback(fixSize, {timeout: 1000});
+        whenAnyScreenChanges(fixSize);
 
         // TODO! Safari backward compatible
         new ResizeObserver((entries) => {
