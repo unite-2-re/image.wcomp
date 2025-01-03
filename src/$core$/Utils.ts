@@ -25,7 +25,7 @@ requestIdleCallback(async ()=>{
         //
         try { await (new Promise((rs)=>requestAnimationFrame(rs))); } catch(e) { break; };
     }
-}, {timeout: 1000});
+}, {timeout: 100});
 
 //
 export const callByFrame = (pointerId, cb)=>{
