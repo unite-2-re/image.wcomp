@@ -22,7 +22,7 @@ export default class UICanvas extends HTMLCanvasElement {
             Math.min(Math.max(this.clientWidth  || parent?.clientWidth  || 1, 1), Math.min(parent?.clientWidth  || 1, screen?.width  || 1)) * (devicePixelRatio || 1),
             Math.min(Math.max(this.clientHeight || parent?.clientHeight || 1, 1), Math.min(parent?.clientHeight || 1, screen?.height || 1)) * (devicePixelRatio || 1)
         ];
-        this.#preload(this.dataset.src, false);
+        this.#preload(this.#loading = this.dataset.src || this.#loading);
     }
 
     //
@@ -78,7 +78,7 @@ export default class UICanvas extends HTMLCanvasElement {
         }).observe(this, {box: "device-pixel-content-box"});
 
         //
-        this.#preload(this.dataset.src, false);
+        this.#preload(this.#loading = this.dataset.src || this.#loading);
     }
 
     //
@@ -117,23 +117,23 @@ export default class UICanvas extends HTMLCanvasElement {
     }
 
     //
-    async $useImageAsSource(blob, doNotRewrite = true) {
-        const ready = this.#loading;
+    async $useImageAsSource(blob, ready?: any|null) {
+        ready ||= this.#loading;
         const img = (blob instanceof ImageBitmap) ? blob : (await createImageBitmapCache(blob).catch(console.warn.bind(console)));
         if (img && ready == this.#loading) { this.image = img; this.#render(ready);}
         return blob;
     }
 
     //
-    #preload(src, dnw = true) {
-        this.#loading = src;
-        return fetch(src)?.then?.(async (rsp)=> this.$useImageAsSource(await rsp.blob(), dnw ?? true)?.catch(console.warn.bind(console)))?.catch?.(console.warn.bind(console));;
+    #preload(src) {
+        const ready = this.#loading; this.#loading = src || this.#loading;
+        return fetch(src)?.then?.(async (rsp)=> this.$useImageAsSource(await rsp.blob(), ready)?.catch(console.warn.bind(console)))?.catch?.(console.warn.bind(console));;
     }
 
     //
     attributeChangedCallback(name, _, newValue) {
         if (name == "data-src") {
-            this.#preload(newValue, false);
+            this.#preload(newValue);
         };
     }
 }
