@@ -126,7 +126,7 @@ export default class UICanvas extends HTMLCanvasElement {
 
     //
     #preload(src) {
-        const ready = this.#loading; this.#loading = src || this.#loading;
+        const ready = src || this.#loading; this.#loading = ready;
         return fetch(src)?.then?.(async (rsp)=> this.$useImageAsSource(await rsp.blob(), ready)?.catch(console.warn.bind(console)))?.catch?.(console.warn.bind(console));;
     }
 
