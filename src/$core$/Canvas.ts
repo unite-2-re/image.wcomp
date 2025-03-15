@@ -34,20 +34,22 @@ export default class UICanvas extends HTMLCanvasElement {
         const parent = this.parentNode as HTMLElement;
 
         //
-        this.ctx = canvas.getContext("2d", {
-            alpha: true,
-            desynchronized: true,
-            powerPreference: "high-performance",
-            preserveDrawingBuffer: true
-        }) as CanvasRenderingContext2D;
+        requestAnimationFrame(()=>{
+            this.ctx = canvas.getContext("2d", {
+                alpha: true,
+                desynchronized: true,
+                powerPreference: "high-performance",
+                preserveDrawingBuffer: true
+            }) as CanvasRenderingContext2D;
 
-        //
-        this.inert = true;
-        this.style.objectFit = "cover";
-        this.style.objectPosition = "center";
-        this.classList.add("u-canvas");
-        this.classList.add("u2-canvas");
-        this.classList.add("ui-canvas");
+            //
+            this.inert = true;
+            this.style.objectFit = "cover";
+            this.style.objectPosition = "center";
+            this.classList.add("u-canvas");
+            this.classList.add("u2-canvas");
+            this.classList.add("ui-canvas");
+        });
 
         //
         const fixSize = () => {
