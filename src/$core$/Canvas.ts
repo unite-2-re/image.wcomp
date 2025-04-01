@@ -1,7 +1,11 @@
 import { callByFrame, cover, createImageBitmapCache, orientationNumberMap } from "./Utils.js"
 
+// @ts-ignore /* @vite-ignore */
+import {importCdn} from "/externals/modules/cdnImport.mjs";
+export {importCdn};
+
 // @ts-ignore
-import { whenAnyScreenChanges, getCorrectOrientation } from "/externals/core/agate.js";
+const { whenAnyScreenChanges, getCorrectOrientation } = await Promise.try(importCdn, ["/externals/core/agate.js"]);
 
 //
 export default class UICanvas extends HTMLCanvasElement {
