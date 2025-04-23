@@ -23,8 +23,8 @@ export default class UICanvas extends HTMLCanvasElement {
     connectedCallback() {
         const parent: HTMLElement = this.parentNode as HTMLElement;
         this.#size = [
-            Math.min(Math.max(this.clientWidth  || parent?.clientWidth  || 1, 1), Math.min(parent?.clientWidth  || 1, screen?.width  || 1)) * (devicePixelRatio || 1),
-            Math.min(Math.max(this.clientHeight || parent?.clientHeight || 1, 1), Math.min(parent?.clientHeight || 1, screen?.height || 1)) * (devicePixelRatio || 1)
+            Math.min(Math.min(Math.max(this.clientWidth  || parent?.clientWidth  || 1, 1), parent?.clientWidth  || 1) * (this.currentCSSZoom || 1), screen?.width  || 1) * (devicePixelRatio || 1),
+            Math.min(Math.min(Math.max(this.clientHeight || parent?.clientHeight || 1, 1), parent?.clientHeight || 1) * (this.currentCSSZoom || 1), screen?.height || 1) * (devicePixelRatio || 1)
         ];
         this.#preload(this.#loading = this.dataset.src || this.#loading);
     }
@@ -44,8 +44,8 @@ export default class UICanvas extends HTMLCanvasElement {
             //
             const old = this.#size;
             this.#size = [
-                Math.max((this.clientWidth  || parent?.clientWidth  || 1) * devicePixelRatio, 1),
-                Math.max((this.clientHeight || parent?.clientHeight || 1) * devicePixelRatio, 1)
+                Math.min(Math.min(Math.max(this.clientWidth  || parent?.clientWidth  || 1, 1), parent?.clientWidth  || 1) * (this.currentCSSZoom || 1), screen?.width  || 1) * (devicePixelRatio || 1),
+                Math.min(Math.min(Math.max(this.clientHeight || parent?.clientHeight || 1, 1), parent?.clientHeight || 1) * (this.currentCSSZoom || 1), screen?.height || 1) * (devicePixelRatio || 1)
             ];
 
             //
@@ -74,6 +74,9 @@ export default class UICanvas extends HTMLCanvasElement {
             //
             fixSize();
 
+            //
+            whenAnyScreenChanges(()=>this.#render(this.#ready));
+
             // TODO! Safari backward compatible
             new ResizeObserver((entries) => {
                 for (const entry of entries) {
@@ -95,9 +98,6 @@ export default class UICanvas extends HTMLCanvasElement {
             //
             this.#preload(this.#loading = this.dataset.src || this.#loading);
         });
-
-        //
-        whenAnyScreenChanges(()=>this.#render(this.#ready));
     }
 
     //
