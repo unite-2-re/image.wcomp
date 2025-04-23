@@ -38,6 +38,23 @@ export default class UICanvas extends HTMLCanvasElement {
         const parent = this.parentNode as HTMLElement;
 
         //
+        const fixSize = () => {
+            this.#orient = orientationNumberMap[getCorrectOrientation() || ""] || 0;
+            
+            //
+            const old = this.#size;
+            this.#size = [
+                Math.max((this.clientWidth  || parent?.clientWidth  || 1) * devicePixelRatio, 1),
+                Math.max((this.clientHeight || parent?.clientHeight || 1) * devicePixelRatio, 1)
+            ];
+
+            //
+            if (old?.[0] != this.#size[0] || old?.[1] != this.#size[1]) {
+                this.#render(this.#ready);
+            }
+        }
+
+        //
         requestAnimationFrame(()=>{
             this.ctx = canvas.getContext("2d", {
                 alpha: true,
@@ -53,38 +70,34 @@ export default class UICanvas extends HTMLCanvasElement {
             this.classList.add("u-canvas");
             this.classList.add("u2-canvas");
             this.classList.add("ui-canvas");
+
+            //
+            fixSize();
+
+            // TODO! Safari backward compatible
+            new ResizeObserver((entries) => {
+                for (const entry of entries) {
+                    const box = entry?.devicePixelContentBoxSize?.[0];
+                    if (box) {
+                        this.#orient = orientationNumberMap[getCorrectOrientation() || ""] || 0;
+                        const old = this.#size;
+                        this.#size  = [
+                            Math.max(/*contentBox.inlineSize * devicePixelRatio*/box.inlineSize || this.width, 1),
+                            Math.max(/*contentBox.blockSize  * devicePixelRatio*/box.blockSize  || this.height, 1)
+                        ];
+                        if (old?.[0] != this.#size[0] || old?.[1] != this.#size[1]) {
+                            this.#render(this.#ready);
+                        }
+                    }
+                }
+            }).observe(this, {box: "device-pixel-content-box"});
+
+            //
+            this.#preload(this.#loading = this.dataset.src || this.#loading);
         });
 
         //
-        const fixSize = () => {
-            this.#orient = orientationNumberMap[getCorrectOrientation() || ""] || 0;
-            this.#size = [
-                Math.max((this.clientWidth  || parent?.clientWidth  || 1) * devicePixelRatio, 1),
-                Math.max((this.clientHeight || parent?.clientHeight || 1) * devicePixelRatio, 1)
-            ];
-            this.#render(this.#ready);
-        }
-
-        //
-        whenAnyScreenChanges(fixSize);
-
-        // TODO! Safari backward compatible
-        new ResizeObserver((entries) => {
-            for (const entry of entries) {
-                const box = entry?.devicePixelContentBoxSize?.[0];
-                if (box) {
-                    this.#orient = orientationNumberMap[getCorrectOrientation() || ""] || 0;
-                    this.#size  = [
-                        Math.max(/*contentBox.inlineSize * devicePixelRatio*/box.inlineSize || this.width, 1),
-                        Math.max(/*contentBox.blockSize  * devicePixelRatio*/box.blockSize  || this.height, 1)
-                    ];
-                    this.#render(this.#ready);
-                }
-            }
-        }).observe(this, {box: "device-pixel-content-box"});
-
-        //
-        this.#preload(this.#loading = this.dataset.src || this.#loading);
+        whenAnyScreenChanges(()=>this.#render(this.#ready));
     }
 
     //
